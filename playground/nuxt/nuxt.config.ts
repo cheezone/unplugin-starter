@@ -1,7 +1,9 @@
+import { env } from 'node:process'
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-03-16',
   devServer: {
-    port: process.env.PORT ? Number(process.env.PORT) : 3000,
+    port: env.PORT ? Number(env.PORT) : 3000,
   },
   modules: ['unplugin-starter/nuxt'],
 })

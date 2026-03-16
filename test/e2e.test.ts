@@ -11,11 +11,13 @@ async function fetchWithTimeout(url: string, ms: number): Promise<Response | nul
   const c = new AbortController()
   const t = setTimeout(() => c.abort(), ms)
   try {
-      const r = await fetch(url, { signal: c.signal })
+    const r = await fetch(url, { signal: c.signal })
     return r
-  } catch {
+  }
+  catch {
     return null
-  } finally {
+  }
+  finally {
     clearTimeout(t)
   }
 }
@@ -30,15 +32,16 @@ async function waitForServer(
   while (Date.now() - start < timeout) {
     for (const u of urls) {
       const r = await fetchWithTimeout(u, 2000)
-      if (r?.ok) return u
+      if (r?.ok)
+        return u
     }
     await new Promise(r => setTimeout(r, 200))
   }
   throw new Error(`Server did not become ready: ${url}`)
 }
 
-describe.sequential('E2E', () => {
-  describe('Nuxt 环境', () => {
+describe.sequential('e2E', () => {
+  describe('nuxt 环境', () => {
     let proc: ReturnType<typeof spawn>
     let baseUrl: string
 
@@ -50,11 +53,7 @@ describe.sequential('E2E', () => {
         env: { ...process.env, PORT: String(NUXT_DEV_PORT), NUXT_PORT: String(NUXT_DEV_PORT) },
         stdio: ['ignore', 'pipe', 'pipe'],
       })
-      baseUrl = await waitForServer(
-        `http://localhost:${NUXT_DEV_PORT}`,
-        10_000,
-        'http://localhost:3000',
-      )
+      baseUrl = await waitForServer(`http://localhost:${NUXT_DEV_PORT}`, 10_000)
     }, 12_000)
 
     afterAll(() => proc.kill('SIGTERM'))
@@ -68,7 +67,7 @@ describe.sequential('E2E', () => {
     })
   })
 
-  describe('Vite 环境', () => {
+  describe('vite 环境', () => {
     let proc: ReturnType<typeof spawn>
 
     beforeAll(async () => {
