@@ -5,5 +5,8 @@ export default defineNuxtConfig({
   devServer: {
     port: env.PORT ? Number(env.PORT) : 3000,
   },
-  modules: ['../../dist/nuxt.mjs'],
+  modules: [
+    // 模块
+    ['../../dist/nuxt.mjs', { /* options */ }],
+  ],
 })
