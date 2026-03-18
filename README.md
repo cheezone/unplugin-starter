@@ -11,7 +11,7 @@
 ```bash
 npx degit cheezone/unplugin-starter my-unplugin
 cd my-unplugin
-bun install
+vp install
 ```
 
 若需要改成自己的插件名，在项目里全局把 `unplugin-starter` 替换成你的包名即可。
@@ -26,15 +26,15 @@ bun install
 
 ## 开发与发布
 
-- 本地开发 / 监听构建：`bun run dev`
-- 运行测试：`bun test`
-- 构建产物：`bun run build`
-- 发布新版本：`bun run release`
+- 本地开发 / 监听构建：`vp run dev`
+- 运行测试：`vp test`
+- 构建产物：`vp run build`
+- 发布新版本：`vp run release`
 
 ## Playground
 
-- Vite：`bun play:vite`
-- Nuxt：`bun play:nuxt`
+- Vite：`vp run play:vite`
+- Nuxt：`vp run play:nuxt`
 
 ## 安装
 
