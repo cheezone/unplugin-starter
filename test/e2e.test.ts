@@ -7,6 +7,7 @@ const rootDir = path.resolve(__dirname, '..');
 const NUXT_DEV_PORT = 30555;
 const VITE_DEV_PORT = 30556;
 const vpBin = process.platform === 'win32' ? 'vp.cmd' : 'vp';
+const describeE2E = process.platform === 'win32' ? describe.skip : describe;
 
 async function fetchWithTimeout(url: string, ms: number): Promise<Response | null> {
   const c = new AbortController();
@@ -47,7 +48,7 @@ function tailLines(s: string, maxLines = 80): string {
   return lines.slice(Math.max(0, lines.length - maxLines)).join('\n');
 }
 
-describe('e2e', () => {
+describeE2E('e2e', () => {
   describe('nuxt 环境', () => {
     let proc: ReturnType<typeof spawn>;
     let baseUrl: string;
@@ -81,7 +82,7 @@ describe('e2e', () => {
       }
     }, 70_000);
 
-    afterAll(() => proc.kill('SIGTERM'));
+    afterAll(() => proc?.kill('SIGTERM'));
 
     it('首页有内容（含插件输出）', async () => {
       const res = await fetch(baseUrl);
@@ -123,7 +124,7 @@ describe('e2e', () => {
       }
     }, 40_000);
 
-    afterAll(() => proc.kill('SIGTERM'));
+    afterAll(() => proc?.kill('SIGTERM'));
 
     it('首页有内容（含 app 挂载点）', async () => {
       const res = await fetch(`http://127.0.0.1:${VITE_DEV_PORT}`);
