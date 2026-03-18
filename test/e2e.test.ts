@@ -6,6 +6,7 @@ const rootDir = path.resolve(__dirname, '..');
 
 const NUXT_DEV_PORT = 30555;
 const VITE_DEV_PORT = 30556;
+const vpBin = process.platform === 'win32' ? 'vp.cmd' : 'vp';
 
 async function fetchWithTimeout(url: string, ms: number): Promise<Response | null> {
   const c = new AbortController();
@@ -34,17 +35,24 @@ async function waitForServer(url: string, timeout = 10_000, fallbackUrl?: string
 }
 
 function spawnVp(args: string[], cwd: string) {
-  return spawn('vp', args, {
+  return spawn(vpBin, args, {
     cwd,
     env: process.env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 }
 
+function tailLines(s: string, maxLines = 80): string {
+  const lines = s.split(/\r?\n/);
+  return lines.slice(Math.max(0, lines.length - maxLines)).join('\n');
+}
+
 describe('e2e', () => {
   describe('nuxt 环境', () => {
     let proc: ReturnType<typeof spawn>;
     let baseUrl: string;
+    let out = '';
+    let err = '';
 
     beforeAll(async () => {
       const cwd = path.join(rootDir, 'playground/nuxt');
@@ -52,8 +60,26 @@ describe('e2e', () => {
         ['exec', 'nuxt', 'dev', '--host', '127.0.0.1', '--port', String(NUXT_DEV_PORT)],
         cwd,
       );
-      baseUrl = await waitForServer(`http://127.0.0.1:${NUXT_DEV_PORT}`, 30_000);
-    }, 35_000);
+      proc.stdout?.on('data', (d: Buffer) => (out += d.toString()));
+      proc.stderr?.on('data', (d: Buffer) => (err += d.toString()));
+
+      try {
+        baseUrl = await waitForServer(`http://127.0.0.1:${NUXT_DEV_PORT}`, 60_000);
+      } catch (e) {
+        if (proc.exitCode != null) {
+          throw new Error(
+            `Nuxt dev exited (${proc.exitCode}).\n\nstdout:\n${tailLines(out)}\n\nstderr:\n${tailLines(err)}`,
+            { cause: e },
+          );
+        }
+        throw new Error(
+          `Nuxt dev not ready.\n\nstdout:\n${tailLines(out)}\n\nstderr:\n${tailLines(err)}`,
+          {
+            cause: e,
+          },
+        );
+      }
+    }, 70_000);
 
     afterAll(() => proc.kill('SIGTERM'));
 
@@ -68,14 +94,34 @@ describe('e2e', () => {
 
   describe('vite 环境', () => {
     let proc: ReturnType<typeof spawn>;
+    let out = '';
+    let err = '';
 
     beforeAll(async () => {
       proc = spawnVp(
         ['dev', '--host', '127.0.0.1', '--port', String(VITE_DEV_PORT)],
         path.join(rootDir, 'playground/vite'),
       );
-      await waitForServer(`http://127.0.0.1:${VITE_DEV_PORT}`, 20_000);
-    }, 25_000);
+      proc.stdout?.on('data', (d: Buffer) => (out += d.toString()));
+      proc.stderr?.on('data', (d: Buffer) => (err += d.toString()));
+
+      try {
+        await waitForServer(`http://127.0.0.1:${VITE_DEV_PORT}`, 30_000);
+      } catch (e) {
+        if (proc.exitCode != null) {
+          throw new Error(
+            `Vite dev exited (${proc.exitCode}).\n\nstdout:\n${tailLines(out)}\n\nstderr:\n${tailLines(err)}`,
+            { cause: e },
+          );
+        }
+        throw new Error(
+          `Vite dev not ready.\n\nstdout:\n${tailLines(out)}\n\nstderr:\n${tailLines(err)}`,
+          {
+            cause: e,
+          },
+        );
+      }
+    }, 40_000);
 
     afterAll(() => proc.kill('SIGTERM'));
 
